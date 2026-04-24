@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sealbox",
+  "compatibility_date": "2026-04-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "routes": [{ "pattern": "sealbox.blastin.ai", "custom_domain": true }],
+  "kv_namespaces": [
+    {
+      "binding": "REQUESTS",
+      "id": "40547534eb6e4423ae11b7193f977710",
+    },
+  ],
+}
