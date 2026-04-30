@@ -93,7 +93,7 @@ function Inbox() {
 					{!isConnected ? (
 						<ConnectGate
 							title="Connect your wallet"
-							description="Connect a wallet to view secrets sent to you."
+							description="Connect a crypto wallet (MetaMask, Trust, Brave) to view messages sent to you."
 						/>
 					) : !key ? (
 						<LockedPlaceholder />

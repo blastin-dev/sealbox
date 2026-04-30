@@ -21,7 +21,7 @@ function Home() {
 					Sealbox
 				</h1>
 				<p className="mx-auto mt-4 max-w-md text-base text-muted-foreground sm:text-lg">
-					Receive credentials encrypted to your wallet. The server only ever
+					Receive messages encrypted to your crypto wallet. The server only ever
 					sees ciphertext.
 				</p>
 				<div className="mt-8 flex justify-center gap-3">

@@ -64,14 +64,14 @@ function NewRequest() {
 			<Hero
 				icon={<Lock className="size-5" />}
 				title="Create request"
-				subtitle="Generate a one-time link a client can use to send you a credential."
+				subtitle="Generate a one-time link someone can use to send you a message."
 			/>
 			<div className="relative z-10 -mt-24 px-6 pb-16">
 				<div className="mx-auto max-w-md">
 					{!isConnected ? (
 						<ConnectGate
 							title="Connect your wallet"
-							description="Connect a wallet to create a request link."
+							description="Connect a crypto wallet (MetaMask, Trust, Brave) to create a request link."
 						/>
 					) : !key ? (
 						<LockedPlaceholder />
