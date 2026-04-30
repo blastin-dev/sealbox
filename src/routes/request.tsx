@@ -17,7 +17,7 @@ import { ConnectGate, UnlockDialog } from "../components/ConnectButton";
 import { useDerivedKey } from "../components/DerivedKeyProvider";
 import { createRequest } from "../lib/server/fns";
 
-export const Route = createFileRoute("/new")({ component: NewRequest });
+export const Route = createFileRoute("/request")({ component: NewRequest });
 
 function NewRequest() {
 	const { address, isConnected } = useAccount();
@@ -63,7 +63,7 @@ function NewRequest() {
 			{isConnected && <UnlockDialog />}
 			<Hero
 				icon={<Lock className="size-5" />}
-				title="New request"
+				title="Create request"
 				subtitle="Generate a one-time link a client can use to send you a credential."
 			/>
 			<div className="relative z-10 -mt-24 px-6 pb-16">

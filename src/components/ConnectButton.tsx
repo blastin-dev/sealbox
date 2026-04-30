@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ExternalLink, Lock, Wallet } from "lucide-react";
+import { ExternalLink, Lock, LogOut, Wallet } from "lucide-react";
 import { useEffect, useState } from "react";
 import { type Connector, useAccount, useConnect, useDisconnect } from "wagmi";
 
@@ -54,27 +54,25 @@ export function ConnectButton({
 
 	if (isConnected && address) {
 		const Icon = activeConnector ? ICONS[activeConnector.id] : undefined;
+		const short = `${address.slice(0, 4)}…${address.slice(-4)}`;
 		return (
-			<div className="flex items-center gap-2">
-				<div className="flex items-center gap-2 rounded-md border bg-background px-2.5 py-1.5">
-					{Icon ? (
-						<Icon className="size-4" />
-					) : (
-						<Wallet className="size-4 text-muted-foreground" />
-					)}
-					<span className="font-mono text-xs">
-						{address.slice(0, 6)}…{address.slice(-4)}
-					</span>
-				</div>
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					onClick={() => disconnect()}
-				>
-					Disconnect
-				</Button>
-			</div>
+			<Button
+				type="button"
+				variant="outline"
+				size="sm"
+				onClick={() => disconnect()}
+				aria-label={`Disconnect ${short}`}
+				title="Disconnect"
+				className="group gap-2 px-2.5 font-mono text-xs"
+			>
+				{Icon ? (
+					<Icon className="size-4" />
+				) : (
+					<Wallet className="size-4 text-muted-foreground" />
+				)}
+				<span className="hidden sm:inline">{short}</span>
+				<LogOut className="size-3.5 text-muted-foreground transition-colors group-hover:text-destructive" />
+			</Button>
 		);
 	}
 
@@ -83,7 +81,8 @@ export function ConnectButton({
 			<DialogTrigger asChild>
 				<Button type="button" size={size}>
 					<Wallet className="size-4" />
-					{label}
+					<span className="hidden sm:inline">{label}</span>
+					<span className="inline sm:hidden">Connect</span>
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-md">

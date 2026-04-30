@@ -489,7 +489,7 @@ function EmptyInbox() {
 			</div>
 			<p className="text-sm font-medium">Nothing in the inbox yet.</p>
 			<Button asChild variant="outline" size="sm">
-				<Link to="/new">Create a request link</Link>
+				<Link to="/request">Create a request link</Link>
 			</Button>
 		</div>
 	);

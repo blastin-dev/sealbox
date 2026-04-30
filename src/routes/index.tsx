@@ -1,10 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Eye, Github, Link2, Lock } from "lucide-react";
+import { Eye, Link2, Lock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const REPO_URL = "https://github.com/blastin-dev/sealbox";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -28,7 +26,7 @@ function Home() {
 				</p>
 				<div className="mt-8 flex justify-center gap-3">
 					<Button asChild size="lg">
-						<Link to="/new">Create request</Link>
+						<Link to="/request">Create request</Link>
 					</Button>
 					<Button asChild variant="outline" size="lg">
 						<Link to="/inbox">Open inbox</Link>
@@ -37,18 +35,6 @@ function Home() {
 			</section>
 
 			<Flow />
-
-			<footer className="mt-24 flex justify-center text-sm text-muted-foreground">
-				<a
-					href={REPO_URL}
-					target="_blank"
-					rel="noreferrer noopener"
-					className="inline-flex items-center gap-2 underline-offset-4 hover:text-foreground hover:underline"
-				>
-					<Github className="size-4" />
-					Open source on GitHub
-				</a>
-			</footer>
 		</div>
 	);
 }
