@@ -92,7 +92,7 @@ function Flow() {
 			</div>
 			<p className="mx-auto mt-10 flex max-w-md items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
 				<Lock className="size-3.5 shrink-0" />
-				The server only ever sees ciphertext — never the plaintext.
+				The server only ever sees ciphertext - never the plaintext.
 			</p>
 		</section>
 	);

@@ -94,7 +94,7 @@ function RequestPage() {
 		<Shell
 			icon={<ShieldCheck className="size-5" />}
 			title={req.label}
-			subtitle="Type the credential below — it's encrypted in your browser before it leaves your device."
+			subtitle="Type the credential below - it's encrypted in your browser before it leaves your device."
 		>
 			<Card className="shadow-xl shadow-primary/5">
 				<CardContent>

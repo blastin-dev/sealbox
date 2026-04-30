@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+	ArrowLeft,
 	CheckCircle2,
 	Copy,
 	Eye,
 	EyeOff,
 	KeyRound,
+	Loader2,
 	RefreshCcw,
 	ShieldCheck,
 	Trash2,
@@ -22,6 +24,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import { ConnectGate, UnlockDialog } from "../components/ConnectButton";
 import { useDerivedKey } from "../components/DerivedKeyProvider";
 import { newNonce } from "../lib/constants";
@@ -95,24 +98,38 @@ function Inbox() {
 					) : !key ? (
 						<LockedPlaceholder />
 					) : (
-						<Card className="shadow-xl shadow-primary/5">
+						<Card className="shadow-xl shadow-violet-500/10">
 							<CardContent className="space-y-4">
 								<div className="flex items-center justify-between gap-2">
-									<p className="text-sm text-muted-foreground">
-										{items
-											? `${items.length} ${items.length === 1 ? "request" : "requests"}`
-											: "Loading…"}
-									</p>
-									<Button
-										type="button"
-										variant="outline"
-										size="sm"
-										onClick={loadInbox}
-										disabled={loading}
-									>
-										<RefreshCcw className="size-4" />
-										{loading ? "Refreshing…" : "Refresh"}
-									</Button>
+									{revealedSecret ? (
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											onClick={() => setRevealedSecret(null)}
+										>
+											<ArrowLeft className="size-4" />
+											Back to inbox
+										</Button>
+									) : (
+										<p className="text-sm text-muted-foreground">
+											{items
+												? `${items.length} ${items.length === 1 ? "request" : "requests"}`
+												: "Loading…"}
+										</p>
+									)}
+									{!revealedSecret && (
+										<Button
+											type="button"
+											variant="outline"
+											size="sm"
+											onClick={loadInbox}
+											disabled={loading}
+										>
+											<RefreshCcw className="size-4" />
+											{loading ? "Refreshing…" : "Refresh"}
+										</Button>
+									)}
 								</div>
 
 								{err && (
@@ -125,7 +142,10 @@ function Inbox() {
 
 								{items && items.length > 0 && (
 									<ul className="flex flex-col gap-3">
-										{items.map((it) => (
+										{(revealedSecret
+											? items.filter((it) => it.id === revealedSecret.id)
+											: items
+										).map((it) => (
 											<InboxItem
 												key={it.id}
 												item={it}
@@ -176,9 +196,9 @@ function Hero({
 	subtitle: string;
 }) {
 	return (
-		<section className="relative overflow-hidden bg-gradient-to-b from-primary/15 to-primary/8 pt-12 pb-32">
+		<section className="relative overflow-hidden bg-gradient-to-b from-violet-500/15 to-violet-500/8 pt-12 pb-32">
 			<div className="mx-auto max-w-2xl px-6 text-center">
-				<div className="mx-auto inline-flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+				<div className="mx-auto inline-flex size-12 items-center justify-center rounded-full bg-violet-500 text-white shadow-sm shadow-violet-500/30">
 					{icon}
 				</div>
 				<h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -317,26 +337,67 @@ function InboxItem({
 
 	const status = item.submitted ? "ready" : "waiting";
 
+	const interactive = status === "ready";
+	const toggle = () => {
+		if (busy) return;
+		if (plaintext) onHide();
+		else reveal();
+	};
+
 	return (
-		<li className="rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
-			<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-				<div className="min-w-0 flex-1">
-					<div className="flex flex-wrap items-center gap-2">
-						<p className="truncate font-medium">{item.label}</p>
-						<StatusBadge status={status} />
-					</div>
-					<p className="mt-1 text-xs text-muted-foreground">
-						{new Date(item.createdAt).toLocaleString()}
-					</p>
-				</div>
-				<div className="flex shrink-0 flex-wrap gap-2">
-					{status === "ready" && !plaintext && (
-						<Button type="button" size="sm" onClick={reveal} disabled={busy}>
-							<Eye className="size-4" />
-							{busy ? "Revealing…" : "Reveal"}
-						</Button>
-					)}
-					{status === "waiting" && (
+		<li
+			className={cn(
+				"overflow-hidden rounded-xl border bg-card shadow-sm transition-all",
+				plaintext && "shadow-md ring-1 ring-violet-500/30",
+				!plaintext && interactive && "hover:shadow-md",
+			)}
+		>
+			<div className="flex items-start justify-between gap-3 p-4">
+				{interactive ? (
+					<button
+						type="button"
+						onClick={toggle}
+						disabled={busy}
+						aria-expanded={!!plaintext}
+						className="-m-1 flex min-w-0 flex-1 items-start justify-between gap-3 rounded-md p-1 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-progress disabled:opacity-70"
+					>
+						<div className="min-w-0 flex-1">
+							<div className="flex flex-wrap items-center gap-2">
+								<p className="truncate font-medium">{item.label}</p>
+								<StatusBadge status={status} />
+							</div>
+							<p className="mt-1 text-xs text-muted-foreground">
+								{new Date(item.createdAt).toLocaleString()}
+							</p>
+						</div>
+						<span
+							className={cn(
+								"grid size-9 shrink-0 place-items-center rounded-md text-violet-600 dark:text-violet-300",
+								plaintext
+									? "bg-violet-100 dark:bg-violet-950/40"
+									: "bg-violet-50 dark:bg-violet-950/20",
+							)}
+						>
+							{busy ? (
+								<Loader2 className="size-4 animate-spin" />
+							) : plaintext ? (
+								<EyeOff className="size-4" />
+							) : (
+								<Eye className="size-4" />
+							)}
+						</span>
+					</button>
+				) : (
+					<>
+						<div className="min-w-0 flex-1">
+							<div className="flex flex-wrap items-center gap-2">
+								<p className="truncate font-medium">{item.label}</p>
+								<StatusBadge status={status} />
+							</div>
+							<p className="mt-1 text-xs text-muted-foreground">
+								{new Date(item.createdAt).toLocaleString()}
+							</p>
+						</div>
 						<Button
 							type="button"
 							variant="outline"
@@ -346,15 +407,34 @@ function InboxItem({
 							<Copy className="size-4" />
 							{copied ? "Copied" : "Copy link"}
 						</Button>
-					)}
-					{plaintext && (
+					</>
+				)}
+			</div>
+			{plaintext && (
+				<div className="mx-4 mb-4 flex items-baseline justify-between gap-4 rounded-xl border border-emerald-500/20 bg-zinc-950 p-4">
+					<pre className="min-w-0 flex-1 overflow-x-auto font-mono text-sm text-emerald-200">
+						{plaintext}
+					</pre>
+					<div className="flex items-center gap-1">
+						<Button
+							type="button"
+							size="sm"
+							variant="secondary"
+							onClick={copySecret}
+							className="bg-white/10 text-emerald-100 hover:bg-white/15 hover:text-white dark:bg-white/10 dark:text-emerald-100"
+						>
+							<Copy className="size-4" />
+							{copiedSecret ? "Copied" : "Copy"}
+						</Button>
 						<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
 							<DialogTrigger asChild>
 								<Button
 									type="button"
-									variant="outline"
-									size="sm"
+									size="icon"
+									variant="ghost"
 									disabled={busy}
+									aria-label="Remove encrypted copy"
+									className="size-8 text-emerald-100/60 hover:bg-white/10 hover:text-emerald-100"
 								>
 									<Trash2 className="size-4" />
 								</Button>
@@ -389,34 +469,11 @@ function InboxItem({
 								</div>
 							</DialogContent>
 						</Dialog>
-					)}
-					{status === "ready" && plaintext && (
-						<Button type="button" variant="outline" size="sm" onClick={onHide}>
-							<EyeOff className="size-4" />
-							Hide
-						</Button>
-					)}
-				</div>
-			</div>
-			{plaintext && (
-				<div className="mt-3 flex items-baseline justify-between gap-4 rounded-xl border border-emerald-500/20 bg-zinc-950 p-4">
-					<pre className="min-w-0 flex-1 overflow-x-auto font-mono text-sm text-emerald-200">
-						{plaintext}
-					</pre>
-					<Button
-						type="button"
-						size="sm"
-						variant="secondary"
-						onClick={copySecret}
-						className="bg-white/10 text-emerald-100 hover:bg-white/15 hover:text-white dark:bg-white/10 dark:text-emerald-100"
-					>
-						<Copy className="size-4" />
-						{copiedSecret ? "Copied" : "Copy"}
-					</Button>
+					</div>
 				</div>
 			)}
 			{err && (
-				<p className="mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+				<p className="mx-4 mb-4 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
 					{err}
 				</p>
 			)}

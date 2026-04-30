@@ -82,7 +82,7 @@ function NewRequest() {
 							onReset={resetRequest}
 						/>
 					) : (
-						<Card className="shadow-xl shadow-primary/5">
+						<Card className="shadow-xl shadow-sky-500/10">
 							<CardContent>
 								<form onSubmit={onSubmit} className="flex flex-col gap-4">
 									<div className="flex flex-col gap-2">
@@ -101,6 +101,7 @@ function NewRequest() {
 										type="submit"
 										size="lg"
 										disabled={submitting || !label}
+										className="bg-sky-500 text-white shadow-sm shadow-sky-500/30 hover:bg-sky-600"
 									>
 										{submitting ? "Creating…" : "Create request link"}
 									</Button>
@@ -129,9 +130,9 @@ function Hero({
 	subtitle: string;
 }) {
 	return (
-		<section className="relative overflow-hidden bg-gradient-to-b from-primary/15 to-primary/8 pt-12 pb-32">
+		<section className="relative overflow-hidden bg-gradient-to-b from-sky-500/15 to-sky-500/8 pt-12 pb-32">
 			<div className="mx-auto max-w-2xl px-6 text-center">
-				<div className="mx-auto inline-flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+				<div className="mx-auto inline-flex size-12 items-center justify-center rounded-full bg-sky-500 text-white shadow-sm shadow-sky-500/30">
 					{icon}
 				</div>
 				<h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -193,7 +194,11 @@ function ShareLink({
 					{url}
 				</code>
 				<div className="flex flex-col gap-2 sm:flex-row">
-					<Button type="button" onClick={copy} className="sm:flex-1">
+					<Button
+						type="button"
+						onClick={copy}
+						className="bg-sky-500 text-white shadow-sm shadow-sky-500/30 hover:bg-sky-600 sm:flex-1"
+					>
 						{copied ? (
 							<>
 								<Check className="size-4" />
