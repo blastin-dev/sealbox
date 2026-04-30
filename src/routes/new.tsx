@@ -1,12 +1,19 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, KeyRound, Link2, Lock } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 
 import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ConnectButton } from "../components/ConnectButton";
+import { ConnectGate, UnlockDialog } from "../components/ConnectButton";
 import { useDerivedKey } from "../components/DerivedKeyProvider";
 import { createRequest } from "../lib/server/fns";
 
@@ -14,7 +21,7 @@ export const Route = createFileRoute("/new")({ component: NewRequest });
 
 function NewRequest() {
 	const { address, isConnected } = useAccount();
-	const { key, isDeriving, derive } = useDerivedKey();
+	const { key } = useDerivedKey();
 	const router = useRouter();
 	const [label, setLabel] = useState("");
 	const [submitting, setSubmitting] = useState(false);
@@ -31,6 +38,7 @@ function NewRequest() {
 				data: {
 					label,
 					recipientPubkey: key.publicKeyHex,
+					recipientAuthPubkey: key.authPublicKeyHex,
 					recipientAddress: address,
 				},
 			});
@@ -44,57 +52,121 @@ function NewRequest() {
 		}
 	}
 
+	function resetRequest() {
+		setLabel("");
+		setShareLink(null);
+		setErr(null);
+	}
+
 	return (
-		<div className="mx-auto max-w-xl px-6 py-12">
-			<h1 className="text-2xl font-semibold">New request</h1>
-
-			<div className="mt-6">
-				<ConnectButton />
-			</div>
-
-			{isConnected && !key && (
-				<div className="mt-6 rounded-md border bg-amber-50 p-4 dark:bg-amber-950/30">
-					<p className="text-sm">
-						Sign a one-time message to derive your encryption key. You'll be
-						asked again on each new session.
-					</p>
-					<Button
-						type="button"
-						onClick={() => derive()}
-						disabled={isDeriving}
-						className="mt-3"
-						size="sm"
-					>
-						{isDeriving ? "Waiting for signature…" : "Derive key"}
-					</Button>
-				</div>
-			)}
-
-			{key && (
-				<form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4">
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="label">Label (shown to the client)</Label>
-						<Input
-							id="label"
-							required
-							value={label}
-							onChange={(e) => setLabel(e.target.value)}
-							placeholder="e.g. Gmail account for Acme onboarding"
+		<>
+			{isConnected && <UnlockDialog />}
+			<Hero
+				icon={<Lock className="size-5" />}
+				title="New request"
+				subtitle="Generate a one-time link a client can use to send you a credential."
+			/>
+			<div className="relative z-10 -mt-24 px-6 pb-16">
+				<div className="mx-auto max-w-md">
+					{!isConnected ? (
+						<ConnectGate
+							title="Connect your wallet"
+							description="Connect a wallet to create a request link."
 						/>
-					</div>
-					<Button type="submit" disabled={submitting || !label}>
-						{submitting ? "Creating…" : "Create request link"}
-					</Button>
-					{err && <p className="text-sm text-destructive">{err}</p>}
-				</form>
-			)}
-
-			{shareLink && <ShareLink url={shareLink} />}
-		</div>
+					) : !key ? (
+						<LockedPlaceholder />
+					) : shareLink ? (
+						<ShareLink
+							url={shareLink}
+							label={label || "Untitled request"}
+							onReset={resetRequest}
+						/>
+					) : (
+						<Card className="shadow-xl shadow-primary/5">
+							<CardContent>
+								<form onSubmit={onSubmit} className="flex flex-col gap-4">
+									<div className="flex flex-col gap-2">
+										<Label htmlFor="label">Label</Label>
+										<Input
+											id="label"
+											required
+											autoFocus
+											autoComplete="off"
+											value={label}
+											onChange={(e) => setLabel(e.target.value)}
+											placeholder="e.g. Gmail account for Acme onboarding"
+										/>
+									</div>
+									<Button
+										type="submit"
+										size="lg"
+										disabled={submitting || !label}
+									>
+										{submitting ? "Creating…" : "Create request link"}
+									</Button>
+									{err && (
+										<p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+											{err}
+										</p>
+									)}
+								</form>
+							</CardContent>
+						</Card>
+					)}
+				</div>
+			</div>
+		</>
 	);
 }
 
-function ShareLink({ url }: { url: string }) {
+function Hero({
+	icon,
+	title,
+	subtitle,
+}: {
+	icon: React.ReactNode;
+	title: string;
+	subtitle: string;
+}) {
+	return (
+		<section className="relative overflow-hidden bg-gradient-to-b from-primary/15 to-primary/8 pt-12 pb-32">
+			<div className="mx-auto max-w-2xl px-6 text-center">
+				<div className="mx-auto inline-flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+					{icon}
+				</div>
+				<h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+					{title}
+				</h1>
+				<p className="mt-3 text-base text-muted-foreground">{subtitle}</p>
+			</div>
+		</section>
+	);
+}
+
+function LockedPlaceholder() {
+	return (
+		<Card className="border-dashed bg-muted/30 shadow-sm">
+			<CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+				<div className="grid size-12 place-items-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+					<KeyRound className="size-5" />
+				</div>
+				<p className="text-sm text-muted-foreground">
+					Unlock your vault to continue.
+				</p>
+			</CardContent>
+		</Card>
+	);
+}
+
+function ShareLink({
+	url,
+	label,
+	onReset,
+}: {
+	url: string;
+	label: string;
+	onReset: () => void;
+}) {
 	const [copied, setCopied] = useState(false);
 
 	async function copy() {
@@ -108,29 +180,49 @@ function ShareLink({ url }: { url: string }) {
 	}
 
 	return (
-		<div className="mt-8 rounded-md border bg-green-50 p-4 dark:bg-green-950/30">
-			<p className="text-sm font-medium">Share this link with your client:</p>
-			<div className="mt-3 flex gap-2">
-				<code className="flex-1 overflow-x-auto rounded bg-background px-3 py-2 text-xs">
+		<Card className="border-emerald-200/70 shadow-xl shadow-emerald-500/5 dark:border-emerald-900/70">
+			<CardHeader>
+				<CardTitle className="text-xl">Request link ready</CardTitle>
+				<CardDescription>
+					Send <span className="font-medium text-foreground">{label}</span> the
+					link below.
+				</CardDescription>
+			</CardHeader>
+			<CardContent className="space-y-4">
+				<code className="block overflow-x-auto break-all rounded-md border bg-muted/30 px-3 py-2 text-sm">
 					{url}
 				</code>
-				<Button
-					type="button"
-					onClick={copy}
-					variant="outline"
-					size="icon"
-					aria-label="Copy link"
-				>
-					{copied ? (
-						<Check className="size-4 text-green-600" />
-					) : (
-						<Copy className="size-4" />
-					)}
-				</Button>
-			</div>
-			<p className="mt-3 text-xs text-muted-foreground">
-				{copied ? "Copied to clipboard." : "The link works exactly once."}
-			</p>
-		</div>
+				<div className="flex flex-col gap-2 sm:flex-row">
+					<Button type="button" onClick={copy} className="sm:flex-1">
+						{copied ? (
+							<>
+								<Check className="size-4" />
+								Copied
+							</>
+						) : (
+							<>
+								<Copy className="size-4" />
+								Copy link
+							</>
+						)}
+					</Button>
+					<Button type="button" variant="outline" asChild className="sm:flex-1">
+						<a href={url} target="_blank" rel="noreferrer noopener">
+							<Link2 className="size-4" />
+							Open
+						</a>
+					</Button>
+				</div>
+				<div className="flex justify-center gap-2 pt-2 text-sm">
+					<button
+						type="button"
+						onClick={onReset}
+						className="text-muted-foreground underline-offset-4 hover:underline"
+					>
+						Create another
+					</button>
+				</div>
+			</CardContent>
+		</Card>
 	);
 }

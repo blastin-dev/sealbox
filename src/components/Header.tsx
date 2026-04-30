@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { Github, Lock } from "lucide-react";
+import { Github } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ConnectButton } from "./ConnectButton";
 
 const REPO_URL = "https://github.com/blastin-dev/sealbox";
 
@@ -10,7 +11,13 @@ export function Header() {
 		<header className="border-b bg-background">
 			<div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
 				<Link to="/" className="flex items-center gap-2 font-semibold">
-					<Lock className="size-4" />
+					<img
+						src="/logo.png"
+						alt="Sealbox"
+						className="size-7"
+						width={28}
+						height={28}
+					/>
 					Sealbox
 				</Link>
 				<nav className="flex items-center gap-1">
@@ -25,6 +32,9 @@ export function Header() {
 							<Github className="size-4" />
 						</a>
 					</Button>
+					<div className="ml-2">
+						<ConnectButton />
+					</div>
 				</nav>
 			</div>
 		</header>

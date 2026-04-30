@@ -26,8 +26,20 @@ export const Route = createRootRoute({
 			},
 			{
 				rel: "icon",
-				type: "image/svg+xml",
-				href: "/favicon.svg",
+				type: "image/x-icon",
+				href: "/favicon.ico",
+				sizes: "any",
+			},
+			{
+				rel: "icon",
+				type: "image/png",
+				href: "/favicon-32.png",
+				sizes: "32x32",
+			},
+			{
+				rel: "apple-touch-icon",
+				href: "/icon-192.png",
+				sizes: "192x192",
 			},
 			{
 				rel: "manifest",

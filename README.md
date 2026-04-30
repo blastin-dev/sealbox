@@ -132,9 +132,13 @@ src/
     └── inbox.tsx              admin: list, decrypt, delete
 ```
 
+## License
+
+MIT. See `LICENSE`.
+
 ## Known simplifications
 
 - No rate limiting on the submit endpoint. Add a Workers Rate Limiting binding before exposing publicly.
 - Auth nonce is `Date.now()` with a 5-minute window — good enough for anti-replay at this scale. A KV-tracked single-use nonce would be stronger.
-- Only the `injected()` wallet connector is wired in. To add WalletConnect / Coinbase / etc., extend `src/lib/wagmi.ts`.
+- Only browser-extension wallets are wired in (MetaMask, Trust Wallet, Brave Wallet). To add WalletConnect / Coinbase / etc., extend `src/lib/wagmi.ts`.
 - `mainnet` is configured but nothing actually touches mainnet — signing is chain-agnostic, the chain is just a placeholder for wagmi.

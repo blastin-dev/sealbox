@@ -7,9 +7,19 @@ import {
 } from "react";
 import { useAccount, useSignMessage } from "wagmi";
 import { KEY_DERIVATION_MESSAGE } from "../lib/constants";
-import { derivePrivateKey, publicKeyHex } from "../lib/crypto";
+import {
+	authPublicKeyHex,
+	deriveAuthPrivateKey,
+	derivePrivateKey,
+	publicKeyHex,
+} from "../lib/crypto";
 
-type DerivedKey = { privateKey: Uint8Array; publicKeyHex: string };
+type DerivedKey = {
+	privateKey: Uint8Array;
+	publicKeyHex: string;
+	authPrivateKey: Uint8Array;
+	authPublicKeyHex: string;
+};
 
 type Ctx = {
 	key: DerivedKey | null;
@@ -43,7 +53,14 @@ export function DerivedKeyProvider({
 			const sig = await signMessageAsync({ message: KEY_DERIVATION_MESSAGE });
 			const priv = derivePrivateKey(sig);
 			const pub = publicKeyHex(priv);
-			const next = { privateKey: priv, publicKeyHex: pub };
+			const authPriv = deriveAuthPrivateKey(sig);
+			const authPub = authPublicKeyHex(authPriv);
+			const next: DerivedKey = {
+				privateKey: priv,
+				publicKeyHex: pub,
+				authPrivateKey: authPriv,
+				authPublicKeyHex: authPub,
+			};
 			setKey(next);
 			return next;
 		} catch (e) {

@@ -1,5 +1,5 @@
 import { xchacha20poly1305 } from "@noble/ciphers/chacha.js";
-import { x25519 } from "@noble/curves/ed25519.js";
+import { ed25519, x25519 } from "@noble/curves/ed25519.js";
 import { hkdf } from "@noble/hashes/hkdf.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@noble/hashes/utils.js";
 
 const HKDF_INFO = utf8ToBytes("password-request/ecies/v1");
+const AUTH_DERIVATION_INFO = utf8ToBytes("sealbox-auth-v1");
 
 export type EncryptedPayload = {
 	v: 1;
@@ -43,6 +44,38 @@ export function getPublicKey(privateKey: Uint8Array): Uint8Array {
 
 export function publicKeyHex(privateKey: Uint8Array): string {
 	return bytesToHex(getPublicKey(privateKey));
+}
+
+export function deriveAuthPrivateKey(walletSignatureHex: string): Uint8Array {
+	const sig = hexToBytes(walletSignatureHex.replace(/^0x/, ""));
+	const seed = new Uint8Array(sig.length + AUTH_DERIVATION_INFO.length);
+	seed.set(sig, 0);
+	seed.set(AUTH_DERIVATION_INFO, sig.length);
+	return sha256(seed);
+}
+
+export function authPublicKeyHex(authPrivateKey: Uint8Array): string {
+	return bytesToHex(ed25519.getPublicKey(authPrivateKey));
+}
+
+export function authSign(authPrivateKey: Uint8Array, nonce: string): string {
+	return bytesToHex(ed25519.sign(utf8ToBytes(nonce), authPrivateKey));
+}
+
+export function authVerify(
+	authPublicKeyHex: string,
+	nonce: string,
+	signatureHex: string,
+): boolean {
+	try {
+		return ed25519.verify(
+			hexToBytes(signatureHex.replace(/^0x/, "")),
+			utf8ToBytes(nonce),
+			hexToBytes(authPublicKeyHex.replace(/^0x/, "")),
+		);
+	} catch {
+		return false;
+	}
 }
 
 export function encryptForRecipient(
