@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Eye, Link2, Lock } from "lucide-react";
+import { Eye, Github, Link2, Lock, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,21 @@ function Home() {
 					Receive messages encrypted to your crypto wallet. The server only ever
 					sees ciphertext.
 				</p>
+				<div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs">
+					<span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700 dark:border-emerald-900/80 dark:bg-emerald-950/30 dark:text-emerald-300">
+						<Sparkles className="size-3" />
+						Free - no gas, no fees
+					</span>
+					<a
+						href="https://github.com/blastin-dev/sealbox"
+						target="_blank"
+						rel="noreferrer noopener"
+						className="inline-flex items-center gap-1.5 rounded-full border bg-muted/30 px-2.5 py-1 font-medium text-foreground/80 transition-colors hover:bg-muted/60"
+					>
+						<Github className="size-3" />
+						Open source - self-host it
+					</a>
+				</div>
 				<div className="mt-8 flex justify-center gap-3">
 					<Button asChild size="lg">
 						<Link to="/request">Create request</Link>
@@ -55,22 +70,22 @@ function Flow() {
 						<Stop
 							tone="primary"
 							icon={<Link2 className="size-5" />}
-							title="Request"
+							title="Request & Share"
 							subtitle="You create a one-time link"
 							delay="0s"
 						/>
 						<Stop
 							tone="amber"
 							icon={<Lock className="size-5" />}
-							title="Type & encrypt"
+							title="Type, Encrypt, Send"
 							subtitle="Sender's browser seals the secret"
 							delay="1.5s"
 						/>
 						<Stop
 							tone="emerald"
 							icon={<Eye className="size-5" />}
-							title="Reveal"
-							subtitle="Your browser, your wallet"
+							title="Retrieve"
+							subtitle="Only your wallet can reveal it"
 							delay="2.7s"
 						/>
 					</div>

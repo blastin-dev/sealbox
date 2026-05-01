@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
+import { env } from "cloudflare:workers";
 import { nanoid } from "nanoid";
 import { authVerify } from "../crypto";
 import {
@@ -59,6 +61,11 @@ export const submitCiphertext = createServerFn({ method: "POST" })
 		(data: { id: string; epk: string; n: string; ct: string }) => data,
 	)
 	.handler(async ({ data }) => {
+		const ip = getRequestHeader("cf-connecting-ip") ?? "anon";
+		const { success } = await env.SUBMIT_LIMITER.limit({
+			key: `${data.id}:${ip}`,
+		});
+		if (!success) throw new Error("Too many submissions, slow down");
 		const req = await getRequest(data.id);
 		if (!req) throw new Error("Request not found or expired");
 		if (req.submitted) throw new Error("Request already fulfilled");
