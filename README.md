@@ -95,7 +95,7 @@ First-time setup:
    ]
    ```
 
-2. Add `CLOUDFLARE_API_TOKEN` to repo secrets (Settings → Secrets and variables → Actions). The token needs `Account.Workers Scripts:Edit` and `Zone.Workers Routes:Edit` for `sealbox.app`.
+2. Create a `production` GitHub Environment (Settings → Environments → New environment) and add `CLOUDFLARE_API_TOKEN` to its secrets. The token needs `Account.Workers Scripts:Edit`, `Account.Workers KV Storage:Edit`, `Zone.Workers Routes:Edit`, and `Zone.DNS:Edit` for `sealbox.app`. Optionally add required reviewers on the environment to pause deploys for approval.
 
 To ship:
 
