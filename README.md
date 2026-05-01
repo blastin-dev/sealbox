@@ -1,5 +1,6 @@
 # Sealbox
 
+Live at: https://sealbox.app
 Open source: https://github.com/blastin-dev/sealbox
 
 Request credentials from a client securely, without trusting a third-party password manager or SaaS. The client encrypts in their browser to a public key derived from your crypto wallet; only your wallet can decrypt. The server only ever sees ciphertext.
@@ -8,11 +9,11 @@ Request credentials from a client securely, without trusting a third-party passw
 
 ### 1. You create the request
 
-- Open `/new`, connect your wallet.
+- Open `/request`, connect your wallet.
 - Sign a one-time derivation message — your browser hashes the signature into an **x25519 private key** and derives the matching **public key**.
 - Type a label ("Gmail for Acme onboarding"), click **Create request link**.
 - A server function stores `{ id, label, your_pubkey, your_wallet_address }` in Cloudflare KV.
-- You get a URL like `https://yourapp.com/req/abc123`. Share it however you like — email, Slack, SMS, QR code.
+- You get a URL like `https://sealbox.app/req/abc123`. Share it however you like — email, Slack, SMS, QR code.
 
 **What leaves your browser:** only your public key, the label, and your wallet address. The private key stays in React memory, never hits the server, never persists to disk.
 
@@ -20,30 +21,30 @@ Request credentials from a client securely, without trusting a third-party passw
 
 - No wallet, no login, no account required.
 - Their browser loads `/req/abc123`, which fetches `{ label, your_pubkey }`.
-- They type the password and click **Encrypt & send**.
+- They type the message and click **Encrypt & send**.
 - In their browser:
   - Generate a one-time ephemeral x25519 keypair
   - `ECDH(ephemeral_private, your_pubkey)` → shared secret
   - HKDF → symmetric key
-  - XChaCha20-Poly1305 encrypt the password
+  - XChaCha20-Poly1305 encrypt the message
   - POST `{ ephemeral_pubkey, nonce, ciphertext }` to the Worker
 
-**What leaves their browser:** only the ciphertext blob. The plaintext password is never transmitted. The ephemeral private key is discarded immediately after encryption — nobody keeps it.
+**What leaves their browser:** only the ciphertext blob. The plaintext is never transmitted. The ephemeral private key is discarded immediately after encryption — nobody keeps it.
 
 ### 3. The ciphertext sits in KV
 
-- Keyed by request ID, 7-day TTL, auto-expires if you don't retrieve it.
+- Keyed by request ID, 7-day TTL from submission — auto-expires whether or not you retrieve it.
 - **Nobody can decrypt it** — not you without signing, not the server, not Cloudflare, not an attacker who dumps the namespace.
 
 ### 4. You retrieve and decrypt
 
 - Open `/inbox`, connect wallet, sign the derivation message (same as step 1 → same private key).
 - Sign a nonce to prove wallet ownership; the Worker returns your pending requests.
-- Click **Decrypt** on an item:
+- Tap an item to reveal it:
   - Sign another nonce → Worker returns the ciphertext
   - In your browser: `ECDH(your_private, ephemeral_pubkey)` reproduces the same shared secret the client computed → HKDF → symmetric key → decrypt
   - Plaintext renders on screen
-- Click **Delete from server** to wipe the ciphertext from KV.
+- Click the trash icon to wipe the ciphertext from KV.
 
 ## Security summary
 
@@ -56,7 +57,7 @@ Request credentials from a client securely, without trusting a third-party passw
 | Someone who dumps KV later | **No** — ciphertext |
 | An attacker with your wallet | Yes — equivalent to them having your password-manager master key |
 
-**Threat model:** if your wallet is compromised, passwords you've received are compromised. Otherwise, they're safe.
+**Threat model:** if your wallet is compromised, secrets you've received are compromised. Otherwise, they're safe.
 
 The derived key comes from `sha256(wallet_signature)` of a fixed message, so signing with the same wallet **always produces the same key** — you can come back tomorrow, sign again, and decrypt older ciphertexts. Lose the wallet and those ciphertexts are unrecoverable by design.
 
@@ -127,7 +128,7 @@ src/
 │   └── ConnectButton.tsx
 └── routes/
     ├── index.tsx              landing
-    ├── new.tsx                admin: create request link (wallet-gated)
+    ├── request.tsx            admin: create request link (wallet-gated)
     ├── req.$id.tsx            client: wallet-less encrypt form
     └── inbox.tsx              admin: list, decrypt, delete
 ```
