@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VersionRouteImport } from './routes/version'
 import { Route as RequestRouteImport } from './routes/request'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReqIdRouteImport } from './routes/req.$id'
 
+const VersionRoute = VersionRouteImport.update({
+  id: '/version',
+  path: '/version',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RequestRoute = RequestRouteImport.update({
   id: '/request',
   path: '/request',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/inbox': typeof InboxRoute
   '/request': typeof RequestRoute
+  '/version': typeof VersionRoute
   '/req/$id': typeof ReqIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/inbox': typeof InboxRoute
   '/request': typeof RequestRoute
+  '/version': typeof VersionRoute
   '/req/$id': typeof ReqIdRoute
 }
 export interface FileRoutesById {
@@ -52,25 +60,34 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/inbox': typeof InboxRoute
   '/request': typeof RequestRoute
+  '/version': typeof VersionRoute
   '/req/$id': typeof ReqIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/inbox' | '/request' | '/req/$id'
+  fullPaths: '/' | '/inbox' | '/request' | '/version' | '/req/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/inbox' | '/request' | '/req/$id'
-  id: '__root__' | '/' | '/inbox' | '/request' | '/req/$id'
+  to: '/' | '/inbox' | '/request' | '/version' | '/req/$id'
+  id: '__root__' | '/' | '/inbox' | '/request' | '/version' | '/req/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   InboxRoute: typeof InboxRoute
   RequestRoute: typeof RequestRoute
+  VersionRoute: typeof VersionRoute
   ReqIdRoute: typeof ReqIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/version': {
+      id: '/version'
+      path: '/version'
+      fullPath: '/version'
+      preLoaderRoute: typeof VersionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/request': {
       id: '/request'
       path: '/request'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   InboxRoute: InboxRoute,
   RequestRoute: RequestRoute,
+  VersionRoute: VersionRoute,
   ReqIdRoute: ReqIdRoute,
 }
 export const routeTree = rootRouteImport
