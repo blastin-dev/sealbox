@@ -1,9 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { nanoid } from "nanoid";
-import { verifyMessage } from "viem";
-import { authMessage } from "../constants";
+import { authVerify } from "../crypto";
 import {
 	deleteCiphertext,
+	deleteInboxEntry,
 	getCiphertext,
 	getRequest,
 	listInbox,
@@ -19,6 +19,7 @@ export const createRequest = createServerFn({ method: "POST" })
 		(data: {
 			label: string;
 			recipientPubkey: string;
+			recipientAuthPubkey: string;
 			recipientAddress: string;
 		}) => data,
 	)
@@ -29,6 +30,7 @@ export const createRequest = createServerFn({ method: "POST" })
 			id,
 			label: data.label.slice(0, 200),
 			recipientPubkey: data.recipientPubkey,
+			recipientAuthPubkey: data.recipientAuthPubkey,
 			recipientAddress: data.recipientAddress.toLowerCase(),
 			createdAt: now,
 			expiresAt: now + 7 * 24 * 60 * 60 * 1000,
@@ -70,18 +72,10 @@ export const submitCiphertext = createServerFn({ method: "POST" })
 		return { ok: true };
 	});
 
-async function verifyInboxAuth(
-	address: string,
-	signature: string,
-	nonce: string,
-) {
-	const message = authMessage(nonce);
-	const valid = await verifyMessage({
-		address: address as `0x${string}`,
-		message,
-		signature: signature as `0x${string}`,
-	});
-	if (!valid) throw new Error("Invalid signature");
+function verifyInboxAuth(authPubkey: string, authSig: string, nonce: string) {
+	if (!authVerify(authPubkey, nonce, authSig)) {
+		throw new Error("Invalid signature");
+	}
 	const nonceAgeMs = Date.now() - Number(nonce);
 	if (
 		!Number.isFinite(nonceAgeMs) ||
@@ -94,29 +88,44 @@ async function verifyInboxAuth(
 
 export const inboxList = createServerFn({ method: "POST" })
 	.inputValidator(
-		(data: { address: string; signature: string; nonce: string }) => data,
+		(data: {
+			address: string;
+			authPubkey: string;
+			authSig: string;
+			nonce: string;
+		}) => data,
 	)
 	.handler(async ({ data }) => {
-		await verifyInboxAuth(data.address, data.signature, data.nonce);
+		verifyInboxAuth(data.authPubkey, data.authSig, data.nonce);
 		const reqs = await listInbox(data.address);
-		return reqs.map((r) => ({
-			id: r.id,
-			label: r.label,
-			createdAt: r.createdAt,
-			submitted: r.submitted,
-		}));
+		return reqs
+			.filter((r) => r.recipientAuthPubkey === data.authPubkey)
+			.map((r) => ({
+				id: r.id,
+				label: r.label,
+				createdAt: r.createdAt,
+				submitted: r.submitted,
+			}));
 	});
 
 export const inboxRetrieve = createServerFn({ method: "POST" })
 	.inputValidator(
-		(data: { id: string; address: string; signature: string; nonce: string }) =>
-			data,
+		(data: {
+			id: string;
+			address: string;
+			authPubkey: string;
+			authSig: string;
+			nonce: string;
+		}) => data,
 	)
 	.handler(async ({ data }): Promise<StoredCiphertext | null> => {
-		await verifyInboxAuth(data.address, data.signature, data.nonce);
+		verifyInboxAuth(data.authPubkey, data.authSig, data.nonce);
 		const req = await getRequest(data.id);
 		if (!req) throw new Error("Request not found");
 		if (req.recipientAddress !== data.address.toLowerCase()) {
+			throw new Error("Not authorized for this request");
+		}
+		if (req.recipientAuthPubkey !== data.authPubkey) {
 			throw new Error("Not authorized for this request");
 		}
 		const ct = await getCiphertext(data.id);
@@ -125,16 +134,25 @@ export const inboxRetrieve = createServerFn({ method: "POST" })
 
 export const inboxConsume = createServerFn({ method: "POST" })
 	.inputValidator(
-		(data: { id: string; address: string; signature: string; nonce: string }) =>
-			data,
+		(data: {
+			id: string;
+			address: string;
+			authPubkey: string;
+			authSig: string;
+			nonce: string;
+		}) => data,
 	)
 	.handler(async ({ data }) => {
-		await verifyInboxAuth(data.address, data.signature, data.nonce);
+		verifyInboxAuth(data.authPubkey, data.authSig, data.nonce);
 		const req = await getRequest(data.id);
 		if (!req) return { ok: true };
 		if (req.recipientAddress !== data.address.toLowerCase()) {
 			throw new Error("Not authorized for this request");
 		}
+		if (req.recipientAuthPubkey !== data.authPubkey) {
+			throw new Error("Not authorized for this request");
+		}
 		await deleteCiphertext(data.id);
+		await deleteInboxEntry(req.recipientAddress, data.id);
 		return { ok: true };
 	});

@@ -4,6 +4,7 @@ export type PasswordRequest = {
 	id: string;
 	label: string;
 	recipientPubkey: string;
+	recipientAuthPubkey: string;
 	recipientAddress: string;
 	createdAt: number;
 	expiresAt: number;
@@ -73,6 +74,13 @@ export async function deleteCiphertext(id: string): Promise<void> {
 	await env.REQUESTS.delete(ctKey(id));
 }
 
+export async function deleteInboxEntry(
+	address: string,
+	id: string,
+): Promise<void> {
+	await env.REQUESTS.delete(inboxKey(address, id));
+}
+
 export async function listInbox(
 	address: string,
 ): Promise<Array<PasswordRequest>> {
@@ -81,7 +89,11 @@ export async function listInbox(
 	const reqs = await Promise.all(
 		keys.map(async (k) => {
 			const id = k.name.slice(prefix.length);
-			return getRequest(id);
+			const req = await getRequest(id);
+			if (!req) return null;
+			if (!req.submitted) return req;
+			const ciphertext = await getCiphertext(id);
+			return ciphertext ? req : null;
 		}),
 	);
 	return reqs.filter((r): r is PasswordRequest => r !== null);

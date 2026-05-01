@@ -1,6 +1,7 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { WalletProvider } from "../components/WalletProvider";
 import appCss from "../styles.css?url";
@@ -16,8 +17,36 @@ export const Route = createRootRoute({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "Sealbox",
+				title: "Sealbox — End-to-end encrypted message delivery",
 			},
+			{
+				name: "description",
+				content:
+					"Receive messages encrypted to your crypto wallet. Senders share a secret through a one-time link; the server only ever stores ciphertext.",
+			},
+			{
+				name: "theme-color",
+				content: "#1e3a8a",
+			},
+			{ property: "og:type", content: "website" },
+			{ property: "og:title", content: "Sealbox" },
+			{
+				property: "og:description",
+				content:
+					"Receive messages encrypted to your crypto wallet. The server only ever sees ciphertext.",
+			},
+			{ property: "og:image", content: "/icon-512.png" },
+			{ property: "og:image:width", content: "512" },
+			{ property: "og:image:height", content: "512" },
+			{ property: "og:image:alt", content: "Sealbox logo" },
+			{ name: "twitter:card", content: "summary" },
+			{ name: "twitter:title", content: "Sealbox" },
+			{
+				name: "twitter:description",
+				content:
+					"Receive messages encrypted to your crypto wallet. The server only ever sees ciphertext.",
+			},
+			{ name: "twitter:image", content: "/icon-512.png" },
 		],
 		links: [
 			{
@@ -26,8 +55,20 @@ export const Route = createRootRoute({
 			},
 			{
 				rel: "icon",
-				type: "image/svg+xml",
-				href: "/favicon.svg",
+				type: "image/x-icon",
+				href: "/favicon.ico",
+				sizes: "any",
+			},
+			{
+				rel: "icon",
+				type: "image/png",
+				href: "/favicon-32.png",
+				sizes: "32x32",
+			},
+			{
+				rel: "apple-touch-icon",
+				href: "/icon-192.png",
+				sizes: "192x192",
 			},
 			{
 				rel: "manifest",
@@ -46,8 +87,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				<WalletProvider>
-					<Header />
-					{children}
+					<div className="flex min-h-screen flex-col">
+						<Header />
+						<main className="flex-1">{children}</main>
+						<Footer />
+					</div>
 				</WalletProvider>
 				<TanStackDevtools
 					config={{

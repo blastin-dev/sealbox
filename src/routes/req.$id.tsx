@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Eye, EyeOff } from "lucide-react";
+import {
+	CheckCircle2,
+	Eye,
+	EyeOff,
+	Send,
+	ShieldAlert,
+	ShieldCheck,
+} from "lucide-react";
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { encryptForRecipient } from "../lib/crypto";
@@ -44,79 +52,100 @@ function RequestPage() {
 
 	if (req.submitted) {
 		return (
-			<Shell>
-				<h1 className="text-2xl font-semibold">Already submitted</h1>
-				<p className="mt-2 text-muted-foreground">
-					This request has already been fulfilled. If you need to re-send, ask
-					the recipient to create a new request.
-				</p>
+			<Shell
+				tone="warning"
+				icon={<ShieldAlert className="size-5" />}
+				title="Already submitted"
+				subtitle="This request has already been used and can no longer accept another message."
+			>
+				<Card className="shadow-xl shadow-primary/5">
+					<CardContent className="py-6 text-center">
+						<p className="text-sm text-muted-foreground">
+							Ask the recipient to create a new request link if you need to send
+							another secret.
+						</p>
+					</CardContent>
+				</Card>
 			</Shell>
 		);
 	}
 
 	if (done) {
 		return (
-			<Shell>
-				<h1 className="text-2xl font-semibold text-green-700 dark:text-green-500">
-					Sent securely
-				</h1>
-				<p className="mt-2 text-muted-foreground">
-					Your message was encrypted in your browser and is now only decryptable
-					by the recipient's wallet. You can close this page.
-				</p>
+			<Shell
+				tone="success"
+				icon={<CheckCircle2 className="size-5" />}
+				title="Sent securely"
+				subtitle="Your message was encrypted in your browser and delivered to the recipient's inbox."
+			>
+				<Card className="shadow-xl shadow-primary/5">
+					<CardContent className="py-6 text-center">
+						<p className="text-sm text-muted-foreground">
+							Only the recipient's wallet can reveal this message. The server
+							never saw the plaintext. You can close this page.
+						</p>
+					</CardContent>
+				</Card>
 			</Shell>
 		);
 	}
 
 	return (
-		<Shell>
-			<h1 className="text-2xl font-semibold">{req.label}</h1>
-			<p className="mt-2 text-sm text-muted-foreground">
-				Type anything you want to share — a password, username, 2FA codes, a
-				whole block of credentials. Everything is encrypted in your browser to
-				the recipient's public key before being sent; the server never sees it
-				in plaintext.
-			</p>
-			<form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
-				<div className="flex flex-col gap-2">
-					<div className="flex items-center justify-between">
-						<Label htmlFor="message">Message</Label>
-						<button
-							type="button"
-							onClick={() => setRevealed((r) => !r)}
-							className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-						>
-							{revealed ? (
-								<>
-									<EyeOff className="size-3.5" />
-									Hide
-								</>
-							) : (
-								<>
-									<Eye className="size-3.5" />
-									Show
-								</>
-							)}
-						</button>
-					</div>
-					<AutoTextarea
-						id="message"
-						value={message}
-						onChange={setMessage}
-						revealed={revealed}
-					/>
-				</div>
-				<Button type="submit" disabled={submitting || !message}>
-					{submitting ? "Encrypting…" : "Encrypt & send"}
-				</Button>
-				{err && <p className="text-sm text-destructive">{err}</p>}
-			</form>
-			<p className="mt-6 text-xs text-muted-foreground">
-				Recipient:{" "}
-				<code className="font-mono">
-					{req.recipientAddress.slice(0, 6)}…{req.recipientAddress.slice(-4)}
-				</code>
-			</p>
+		<Shell
+			icon={<ShieldCheck className="size-5" />}
+			title={req.label}
+			subtitle="Type the message below - it's encrypted in your browser before it leaves your device."
+		>
+			<Card className="shadow-xl shadow-primary/5">
+				<CardContent>
+					<form onSubmit={onSubmit} className="flex flex-col gap-4">
+						<div className="flex flex-col gap-2">
+							<div className="flex items-center justify-between">
+								<Label htmlFor="message">Message</Label>
+								<button
+									type="button"
+									onClick={() => setRevealed((r) => !r)}
+									className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+								>
+									{revealed ? (
+										<>
+											<EyeOff className="size-3.5" />
+											Hide
+										</>
+									) : (
+										<>
+											<Eye className="size-3.5" />
+											Show
+										</>
+									)}
+								</button>
+							</div>
+							<AutoTextarea
+								id="message"
+								value={message}
+								onChange={setMessage}
+								revealed={revealed}
+							/>
+						</div>
+						<Button type="submit" size="lg" disabled={submitting || !message}>
+							<Send className="size-4" />
+							{submitting ? "Encrypting…" : "Encrypt & send"}
+						</Button>
+						{err && (
+							<p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+								{err}
+							</p>
+						)}
+						<p className="text-xs text-muted-foreground">
+							Recipient:{" "}
+							<code className="font-mono">
+								{req.recipientAddress.slice(0, 6)}…
+								{req.recipientAddress.slice(-4)}
+							</code>
+						</p>
+					</form>
+				</CardContent>
+			</Card>
 		</Shell>
 	);
 }
@@ -162,6 +191,59 @@ function AutoTextarea({
 	);
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
-	return <div className="mx-auto max-w-xl px-6 py-12">{children}</div>;
+type Tone = "primary" | "success" | "warning";
+
+const TONE_GRADIENT: Record<Tone, string> = {
+	primary: "from-primary/15 to-primary/8",
+	success: "from-emerald-500/15 to-emerald-500/8",
+	warning: "from-amber-500/15 to-amber-500/8",
+};
+
+const TONE_ICON: Record<Tone, string> = {
+	primary: "bg-primary/10 text-primary",
+	success: "bg-emerald-500 text-white shadow-sm shadow-emerald-500/30",
+	warning: "bg-amber-500 text-white shadow-sm shadow-amber-500/30",
+};
+
+function Shell({
+	tone = "primary",
+	icon,
+	title,
+	subtitle,
+	children,
+}: {
+	tone?: Tone;
+	icon: React.ReactNode;
+	title: string;
+	subtitle: string;
+	children: React.ReactNode;
+}) {
+	return (
+		<>
+			<section
+				className={cn(
+					"relative overflow-hidden bg-gradient-to-b pt-12 pb-32",
+					TONE_GRADIENT[tone],
+				)}
+			>
+				<div className="mx-auto max-w-2xl px-6 text-center">
+					<div
+						className={cn(
+							"mx-auto inline-flex size-12 items-center justify-center rounded-full",
+							TONE_ICON[tone],
+						)}
+					>
+						{icon}
+					</div>
+					<h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+						{title}
+					</h1>
+					<p className="mt-3 text-base text-muted-foreground">{subtitle}</p>
+				</div>
+			</section>
+			<div className="relative z-10 -mt-24 px-6 pb-16">
+				<div className="mx-auto max-w-md">{children}</div>
+			</div>
+		</>
+	);
 }
