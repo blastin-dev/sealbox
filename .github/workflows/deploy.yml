@@ -1,0 +1,62 @@
+name: Deploy
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      ARTIFACT_NAME: sealbox-${{ github.event.release.tag_name || github.ref_name }}.tar.gz
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        env:
+          GIT_SHA: ${{ github.sha }}
+          GIT_TAG: ${{ github.event.release.tag_name || github.ref_name }}
+          GIT_REPO: ${{ github.repository }}
+          GIT_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GIT_RELEASE_URL: ${{ github.event.release.html_url }}
+          BUILT_AT: ${{ github.event.release.published_at || github.event.head_commit.timestamp }}
+        run: pnpm build
+
+      - name: Package dist
+        run: tar -czf "$ARTIFACT_NAME" dist
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ env.ARTIFACT_NAME }}
+
+      - name: Upload artifact to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.event.release.tag_name }}" "$ARTIFACT_NAME"
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy

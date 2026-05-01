@@ -35,18 +35,18 @@ export const Route = createRootRoute({
 				content:
 					"Receive messages encrypted to your crypto wallet. The server only ever sees ciphertext.",
 			},
-			{ property: "og:image", content: "/icon-512.png" },
-			{ property: "og:image:width", content: "512" },
-			{ property: "og:image:height", content: "512" },
-			{ property: "og:image:alt", content: "Sealbox logo" },
-			{ name: "twitter:card", content: "summary" },
+			{ property: "og:image", content: "/og-image.png" },
+			{ property: "og:image:width", content: "2816" },
+			{ property: "og:image:height", content: "1536" },
+			{ property: "og:image:alt", content: "Sealbox" },
+			{ name: "twitter:card", content: "summary_large_image" },
 			{ name: "twitter:title", content: "Sealbox" },
 			{
 				name: "twitter:description",
 				content:
 					"Receive messages encrypted to your crypto wallet. The server only ever sees ciphertext.",
 			},
-			{ name: "twitter:image", content: "/icon-512.png" },
+			{ name: "twitter:image", content: "/og-image.png" },
 		],
 		links: [
 			{
