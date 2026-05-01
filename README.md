@@ -95,7 +95,11 @@ First-time setup:
    ]
    ```
 
-2. Create a `production` GitHub Environment (Settings → Environments → New environment) and add `CLOUDFLARE_API_TOKEN` to its secrets. The token needs `Account.Workers Scripts:Edit`, `Account.Workers KV Storage:Edit`, `Zone.Workers Routes:Edit`, and `Zone.DNS:Edit` for `sealbox.app`. Optionally add required reviewers on the environment to pause deploys for approval.
+2. Create a `production` GitHub Environment (Settings → Environments → New environment) and add:
+   - **Secret** `CLOUDFLARE_API_TOKEN` — token needs `Account.Workers Scripts:Edit`, `Account.Workers KV Storage:Edit`, `Zone.Workers Routes:Edit`, and `Zone.DNS:Edit` for `sealbox.app`.
+   - **Variable** `CLOUDFLARE_ACCOUNT_ID` — find it in the Cloudflare dashboard: Account home → right sidebar → "Account ID" (or it's the hex string in any dashboard URL after `/dash/`). Account IDs aren't sensitive; storing as a Variable rather than a Secret keeps it visible in workflow logs for debugging.
+
+   Optionally add required reviewers on the environment to pause deploys for approval.
 
 To ship:
 
