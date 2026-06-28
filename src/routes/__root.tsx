@@ -1,6 +1,12 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+	createRootRoute,
+	HeadContent,
+	Link,
+	Scripts,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { Button } from "@/components/ui/button";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { WalletProvider } from "../components/WalletProvider";
@@ -48,6 +54,18 @@ export const Route = createRootRoute({
 			},
 			{ name: "twitter:image", content: "/og-image.png" },
 		],
+		scripts: [
+			{
+				async: true,
+				src: "https://www.googletagmanager.com/gtag/js?id=G-ZDPXR4CFZX",
+			},
+			{
+				children: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-ZDPXR4CFZX');`,
+			},
+		],
 		links: [
 			{
 				rel: "stylesheet",
@@ -77,7 +95,23 @@ export const Route = createRootRoute({
 		],
 	}),
 	shellComponent: RootDocument,
+	notFoundComponent: NotFound,
 });
+
+function NotFound() {
+	return (
+		<div className="mx-auto flex max-w-md flex-col items-center px-6 py-32 text-center">
+			<p className="text-6xl font-bold tracking-tight">404</p>
+			<h1 className="mt-4 text-2xl font-semibold">Page not found</h1>
+			<p className="mt-2 text-muted-foreground">
+				The page you're looking for doesn't exist or has been moved.
+			</p>
+			<Button asChild className="mt-6">
+				<Link to="/">Back to home</Link>
+			</Button>
+		</div>
+	);
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	return (
